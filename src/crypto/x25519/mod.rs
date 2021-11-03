@@ -61,6 +61,7 @@ impl X25519SecretKey {
         let rng = SystemRandom::new();
         let mut private_key = [0u8; 32];
         rng.fill(&mut private_key[..]).unwrap();
+        curve25519_clamp_secret(&mut private_key[..]);
         X25519SecretKey {
             internal: private_key,
         }
@@ -620,6 +621,11 @@ fn constant_time_swap(a: Felem, b: Felem, swap: u64) -> (Felem, Felem) {
     b_out[3] = v[3] ^ b.0[3];
 
     (Felem(a_out), Felem(b_out))
+}
+
+fn curve25519_clamp_secret(secret_key: &mut [u8]) {
+    secret_key[0] &= 248;
+    secret_key[31] = (secret_key[31] & 127) | 64;
 }
 
 fn x25519_public_key(secret_key: &[u8]) -> [u8; 32] {
